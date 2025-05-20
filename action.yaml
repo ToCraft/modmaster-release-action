@@ -1,0 +1,63 @@
+name: Release ModMaster
+
+description: Builds minecraft mod with ModMaster plugin and release it
+
+inputs:
+  release:
+    description: "Trigger release"
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 22
+      uses: actions/setup-java@v4
+      with:
+        java-version: 22
+        distribution: "temurin"
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Extract Artifact Data
+      shell: bash
+      run: |
+        cat $GITHUB_WORKSPACE/gradle.properties | grep ^artifact_type= >> $GITHUB_ENV
+        cat $GITHUB_WORKSPACE/gradle.properties | grep ^archives_base_name= >> $GITHUB_ENV
+        cat $GITHUB_WORKSPACE/gradle.properties | grep ^mod_version= >> $GITHUB_ENV
+        cat $GITHUB_WORKSPACE/gradle.properties | grep ^archives_base_name= >> $GITHUB_ENV
+        cat $GITHUB_WORKSPACE/gradle.properties | grep ^mod_version= >> $GITHUB_ENV
+
+    - name: Build + Release via Gradle
+      shell: bash
+      run: ./gradlew check build release
+      env:
+        MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+        CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        DISCORD_WEB_HOOK: ${{ secrets.DISCORD_WEB_HOOK }}
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: "${{ env.archives_base_name }}-${{ env.mod_version }}"
+        path: |
+          build/**/**/libs/
+          !build/*/libs/
+          !build/**/craftedcore/libs/
+          !build/libs/
+          !**/*-dev.jar
+          !**/*-shadow.jar
+          !**/*-transformProduction*.jar
+          !**/testmod*/
+
+    - name: Create GitHub Release
+      if: env.artifact_type == 'release'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "${{ env.mod_version }}"
+        files: |
+          build/${{ env.archives_base_name }}-${{ env.mod_version }}.zip
+        body_path: ${{ github.workspace }}/extracted.CHANGELOG.md
