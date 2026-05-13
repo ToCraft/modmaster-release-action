@@ -38,9 +38,7 @@ runs:
       shell: bash
       run: |
         cat $GITHUB_WORKSPACE/gradle.properties | grep ^artifact_type= >> $GITHUB_ENV
-        cat $GITHUB_WORKSPACE/gradle.properties | grep ^archives_base_name= >> $GITHUB_ENV
-        cat $GITHUB_WORKSPACE/gradle.properties | grep ^mod_version= >> $GITHUB_ENV
-        cat $GITHUB_WORKSPACE/gradle.properties | grep ^archives_base_name= >> $GITHUB_ENV
+        cat $GITHUB_WORKSPACE/gradle.properties | grep ^modid= >> $GITHUB_ENV
         cat $GITHUB_WORKSPACE/gradle.properties | grep ^mod_version= >> $GITHUB_ENV
 
     - name: Build + Release via Gradle
@@ -54,7 +52,7 @@ runs:
 
     - uses: actions/upload-artifact@v7
       with:
-        name: "${{ env.archives_base_name }}-${{ env.mod_version }}"
+        name: "${{ env.modid }}-${{ env.mod_version }}"
         path: |
           build/**/**/libs/
           !build/*/libs/
@@ -71,5 +69,5 @@ runs:
       with:
         tag_name: "${{ env.mod_version }}"
         files: |
-          build/${{ env.archives_base_name }}-${{ env.mod_version }}.zip
+          build/${{ env.modid }}-${{ env.mod_version }}.zip
         body_path: ${{ github.workspace }}/extracted.CHANGELOG.md
