@@ -6,7 +6,7 @@ inputs:
   java-version:
     description: "Java version to use"
     required: false
-    default: "22"
+    default: "25"
   maven-pass:
     description: "Passkey for the maven repository"
     required: true
@@ -25,14 +25,14 @@ runs:
   steps:
     - uses: actions/checkout@v4
 
-    - name: Set up JDK 22
-      uses: actions/setup-java@v4
+    - name: Set up JDK
+      uses: actions/setup-java@v5
       with:
         java-version: ${{ inputs.java-version }}
         distribution: "temurin"
 
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
+      uses: gradle/actions/setup-gradle@v6
 
     - name: Extract Artifact Data
       shell: bash
@@ -52,7 +52,7 @@ runs:
         MODRINTH_TOKEN: ${{ inputs.modrinth-token }}
         DISCORD_WEB_HOOK: ${{ inputs.webhook }}
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: "${{ env.archives_base_name }}-${{ env.mod_version }}"
         path: |
@@ -67,7 +67,7 @@ runs:
 
     - name: Create GitHub Release
       if: env.artifact_type == 'release'
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         tag_name: "${{ env.mod_version }}"
         files: |
