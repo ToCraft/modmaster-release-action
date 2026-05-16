@@ -50,18 +50,11 @@ runs:
         MODRINTH_TOKEN: ${{ inputs.modrinth-token }}
         DISCORD_WEB_HOOK: ${{ inputs.webhook }}
 
-    - uses: actions/upload-artifact@v7
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v7
       with:
-        name: "${{ env.modid }}-${{ env.mod_version }}"
-        path: |
-          build/**/**/libs/
-          !build/*/libs/
-          !build/**/craftedcore/libs/
-          !build/libs/
-          !**/*-dev.jar
-          !**/*-shadow.jar
-          !**/*-transformProduction*.jar
-          !**/testmod*/
+        path: "build/*.zip"
+        archive: false
 
     - name: Create GitHub Release
       if: env.artifact_type == 'release'
