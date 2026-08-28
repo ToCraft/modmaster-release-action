@@ -1,0 +1,44 @@
+name: Auto-update Tags
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  update-tags:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Extract Major and Minor Tags
+        id: extract_tags
+        run: |
+          # Extract full tag (e.g., v1.2.3)
+          FULL_TAG="${GITHUB_REF#refs/tags/}"
+
+          # Extract major (v1) and minor (v1.2)
+          MAJOR_TAG=$(echo "$FULL_TAG" | cut -d. -f1)
+          MINOR_TAG=$(echo "$FULL_TAG" | cut -d. -f1-2)
+
+          echo "major_tag=$MAJOR_TAG" >> $GITHUB_OUTPUT
+          echo "minor_tag=$MINOR_TAG" >> $GITHUB_OUTPUT
+
+      - name: Force Update Tags
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          MAJOR="${{ steps.extract_tags.outputs.major_tag }}"
+          MINOR="${{ steps.extract_tags.outputs.minor_tag }}"
+
+          # Create or update moving tags pointing to current commit
+          git tag -fa "$MAJOR" -m "Update $MAJOR tag"
+          git tag -fa "$MINOR" -m "Update $MINOR tag"
+
+          # Force push tags back to the repository
+          git push origin "$MAJOR" --force
+          git push origin "$MINOR" --force
